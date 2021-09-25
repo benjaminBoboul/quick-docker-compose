@@ -1,0 +1,66 @@
+version: "3.9"
+
+volumes:
+  zookeeper-backup-01:
+  zookeeper-backup-02:
+  zookeeper-backup-03:
+  kafka-01:
+  kafka-02:
+  kafka-03:
+
+services:
+
+  zookeeper-01:
+    &zookeeper-scheme
+    image: confluentinc/cp-zookeeper:latest
+    env_file: zookeeper.env
+    environment:
+    - ZOOKEEPER_SERVER_ID=1
+
+  zookeeper-02:
+    <<: *zookeeper-scheme
+    environment:
+    - ZOOKEEPER_SERVER_ID=2
+
+  zookeeper-03:
+    <<: *zookeeper-scheme
+    environment:
+    - ZOOKEEPER_SERVER_ID=3
+
+  kafka-01:
+    &kafka-scheme
+    image: confluentinc/cp-kafka:latest
+    env_file: kafka.env
+    volumes:
+    - ./truststore.p12:/etc/kafka/secrets/truststore.p12
+    - ./keystore-kafka-01.p12:/etc/kafka/secrets/keystore-kafka.p12
+    - ./keystore.creds:/etc/kafka/secrets/keystore.creds
+    - ./ca.crt:/etc/kafka/secrets/ca.crt
+    environment:
+    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:9092,SSL://kafka-01:9093
+  
+  kafka-02: 
+    <<: *kafka-scheme
+    volumes:
+    - ./truststore.p12:/etc/kafka/secrets/truststore.p12
+    - ./keystore-kafka-02.p12:/etc/kafka/secrets/keystore-kafka.p12
+    - ./keystore_creds:/etc/kafka/secrets/keystore_creds
+    - ./ca.crt:/etc/kafka/secrets/ca.crt
+    environment:
+    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:9092,SSL://kafka-02:9093
+
+  kafka-03: 
+    <<: *kafka-scheme
+    volumes:
+    - ./truststore.p12:/etc/kafka/secrets/truststore.p12
+    - ./keystore-kafka-03.p12:/etc/kafka/secrets/keystore-kafka.p12
+    - ./keystore_creds:/etc/kafka/secrets/keystore_creds
+    - ./ca.crt:/etc/kafka/secrets/ca.crt
+    environment:
+    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:9092,SSL://kafka-03:9093
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    env_file: kafka-ui.env
+    ports:
+    - 8080:8080
