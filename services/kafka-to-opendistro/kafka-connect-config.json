@@ -1,0 +1,30 @@
+{
+    "name": "kafka-sink-elk",
+    "config": {
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "tasks.max": "3",
+        "topics.regex": "(my-topic-A)|(my-topic-B)",
+        "transforms": "renameTopic",
+        "transforms.renameTopic.type": "org.apache.kafka.connect.transforms.RegexRouter",
+        "transforms.renameTopic.regex": "(my-topic-A)|(my-topic-B)",
+        "transforms.renameTopic.replacement": "$0",
+        "key.ignore": "true",
+        "connection.url": "https://opendistro-01:9200,https://opendistro-02:9200,https://opendistro-03:9200",
+        "connection.username": "admin",
+        "connection.password": "admin",
+        "type.name": "_doc",
+        "schema.ignore": "true",
+        "schema.enable": "false",
+        "flush.timeout": "2000",
+        "batch.size": "10",
+        "elastic.security.protocol": "SSL",
+        "elastic.https.ssl.truststore.location": "/usr/share/connect/truststore.jks",
+        "elastic.https.ssl.truststore.password": "changeit",
+        "elastic.https.ssl.endpoint.identification.algorithm": "",
+        "elastic.https.ssl.protocol": "TLS",
+        "errors.tolerance": "all",
+        "errors.log.enable": "true",
+        "errors.log.include.messages": "true",
+        "behavior.on.malformed.documents": "warn"
+    }
+}

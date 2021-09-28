@@ -1,0 +1,111 @@
+version: "3.9"
+
+services:
+
+  connect:
+    # https://github.com/confluentinc/demo-scene/blob/master/kafka-connect-zero-to-hero/docker-compose.yml#L89-L101
+    image: confluentinc/cp-kafka-connect:latest
+    depends_on: [kafka-01, kafka-02, kafka-03, opendistro-01, opendistro-02, opendistro-03]
+    ports:
+    - 8082:8082
+    volumes:
+    - ./truststore.jks:/usr/share/connect/truststore.jks:ro
+    env_file: kafka-connect.env
+    command:
+    - bash
+    - -c
+    - |
+      echo "Installing Connector"
+      confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:11.1.2
+      #
+      echo "Launching Kafka Connect worker"
+      /etc/confluent/docker/run &
+      #
+      sleep infinity
+
+  zookeeper-01: &zookeeper-scheme
+    image: confluentinc/cp-zookeeper:latest
+    env_file: zookeeper.env
+    environment:
+    - ZOOKEEPER_SERVER_ID=1
+
+  zookeeper-02:
+    <<: *zookeeper-scheme
+    environment:
+    - ZOOKEEPER_SERVER_ID=2
+
+  zookeeper-03:
+    <<: *zookeeper-scheme
+    environment:
+    - ZOOKEEPER_SERVER_ID=3
+
+
+  kafka-01: &kafka-scheme
+    image: confluentinc/cp-kafka:latest
+    depends_on: [zookeeper-01, zookeeper-02, zookeeper-03]
+    volumes:
+    - ./truststore.jks:/etc/kafka/secrets/truststore.jks:ro
+    - ./keystore-kafka.jks:/etc/kafka/secrets/keystore-kafka.jks:ro
+    - ./keystore.creds:/etc/kafka/secrets/keystore.creds:ro
+    - ./truststore.creds:/etc/kafka/secrets/truststore.creds:ro
+    - ./key.creds:/etc/kafka/secrets/key.creds:ro
+    env_file: kafka.env
+    environment:
+    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:9092,SSL://kafka-01:9093
+
+  kafka-02:
+    <<: *kafka-scheme
+    environment:
+    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:9092,SSL://kafka-02:9093
+    
+  
+  kafka-03:
+    <<: *kafka-scheme
+    environment:
+    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://:9092,SSL://kafka-03:9093
+
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    depends_on: [kafka-01, kafka-02, kafka-03, connect]
+    environment:
+    - KAFKA_CLUSTERS_0_NAME=local
+    - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-01:9092,kafka-02:9092,kafka-03:9092
+    - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper-01:2181,zookeeper-02:2181,zookeeper-03:2181
+    - KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME=connect
+    - KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS=http://connect:8082/
+    ports:
+    - 8080:8080
+
+
+  opendistro-01: &opendistro-scheme
+    image: amazon/opendistro-for-elasticsearch:latest
+    env_file: opendistro.env
+    environment:
+    - node.name=opendistro-01
+    volumes:
+    - ./admin.crt:/usr/share/elasticsearch/config/admin.crt:ro
+    - ./admin.pem:/usr/share/elasticsearch/config/admin.pem:ro
+    - ./ca.crt:/usr/share/elasticsearch/config/ca.crt:ro
+    - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+
+  opendistro-02:
+    <<: *opendistro-scheme
+    environment:
+    - node.name=opendistro-02
+
+
+  opendistro-03:
+    <<: *opendistro-scheme
+    environment:
+    - node.name=opendistro-03
+
+
+  kibana:
+    image: amazon/opendistro-for-elasticsearch-kibana:latest
+    depends_on: [opendistro-01, opendistro-02, opendistro-03]
+    ports:
+    - 5601:5601
+    volumes:
+    - ./kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    - ./ca.crt:/usr/share/kibana/config/cacert.crt:ro

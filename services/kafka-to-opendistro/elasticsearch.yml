@@ -1,0 +1,20 @@
+cluster.name: opendistro-cluster
+network.host: [_local_, _site_]
+discovery.seed_hosts: opendistro-01,opendistro-02:9200,opendistro-03
+cluster.initial_master_nodes: opendistro-01,opendistro-02,opendistro-03
+cluster.routing.allocation.disk.threshold_enabled: false
+
+opendistro_security.ssl.transport.pemkey_filepath: admin.pem
+opendistro_security.ssl.transport.pemcert_filepath: admin.crt
+opendistro_security.ssl.transport.pemtrustedcas_filepath: ca.crt
+opendistro_security.ssl.transport.enforce_hostname_verification: false
+
+opendistro_security.ssl.http.enabled: true
+opendistro_security.ssl.http.pemkey_filepath: admin.pem
+opendistro_security.ssl.http.pemcert_filepath: admin.crt
+opendistro_security.ssl.http.pemtrustedcas_filepath: ca.crt
+
+
+opendistro_security.allow_default_init_securityindex: true
+opendistro_security.nodes_dn:
+  - 'C=FR,ST=Somewhere,L=SomeCity,O=Organism,OU=MyUnit,CN=admin'
