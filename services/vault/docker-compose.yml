@@ -1,0 +1,7 @@
+version: "3.9"
+
+services:
+  vault:
+    image: vault
+    cap_add:
+    - IPC_LOCK
