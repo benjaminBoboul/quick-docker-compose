@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v2.5
+    command: --api.insecure=true --providers.docker
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  serverA:
+    image: httpd:2.4
+    labels:
+      - traefik.http.routers.webservice.rule=Host(`www.localhost`)
+      - traefik.http.services.webservice-docker.loadbalancer.server.port=80
+    volumes:
+     - ./pages/serverA.html:/usr/local/apache2/htdocs/index.html
+
+  serverB:
+    image: httpd:2.4
+    labels:
+      - traefik.http.routers.webservice.rule=Host(`www.localhost`)
+      - traefik.http.services.webservice-docker.loadbalancer.server.port=80
+    volumes:
+     - ./pages/serverB.html:/usr/local/apache2/htdocs/index.html
