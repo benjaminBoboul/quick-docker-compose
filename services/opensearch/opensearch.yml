@@ -1,0 +1,20 @@
+cluster.name: opensearch-cluster
+network.host: [_local_, _site_]
+discovery.seed_hosts: ["opensearch-01:9200", "opensearch-02:9200", "opensearch-03:9200"]
+cluster.initial_master_nodes: ["opensearch-01:9200", "opensearch-02:9200", "opensearch-03:9200"]
+cluster.routing.allocation.disk.threshold_enabled: false
+
+plugins.security.ssl.transport.pemkey_filepath: admin.pem
+plugins.security.ssl.transport.pemcert_filepath: admin.crt
+plugins.security.ssl.transport.pemtrustedcas_filepath: ca.crt
+plugins.security.ssl.transport.enforce_hostname_verification: false
+
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemkey_filepath: admin.pem
+plugins.security.ssl.http.pemcert_filepath: admin.crt
+plugins.security.ssl.http.pemtrustedcas_filepath: ca.crt
+
+
+plugins.security.allow_default_init_securityindex: true
+plugins.security.nodes_dn:
+  - 'C=FR,ST=Somewhere,L=SomeCity,O=Organism,OU=MyUnit,CN=admin'
